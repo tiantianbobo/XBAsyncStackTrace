@@ -33,9 +33,7 @@ static inline void tls_set(tls_key_t k, const void * _Nullable value) {
 }
 static tls_key_t XBThreadAsyncStackTraceTlsKey;
 static NSMutableDictionary<NSValue *, XBThreadAsyncStackTraceRecord *> *recordDic;
-static os_unfair_lock recordDicLock = OS_UNFAIR_LOCK_INIT;
 static BOOL initialized = NO;
-
 static void destroyThreadStackTraceRecord(void *value) {
     if (value == XB_TSD_BAD_PTR) {
         return;
@@ -46,6 +44,8 @@ static void destroyThreadStackTraceRecord(void *value) {
     record = nil;
 }
 #define CHECKINITIALIZED()     NSAssert(initialized, @"sdhould initializeAsyncStackTraceRecord first")
+
+
 @implementation XBThreadAsyncStackTraceRecord
 + (BOOL)initializeAsyncStackTraceRecord {
     XBThreadAsyncStackTraceTlsKey = tls_create(&destroyThreadStackTraceRecord);
@@ -74,22 +74,22 @@ static void destroyThreadStackTraceRecord(void *value) {
 
 + (void)asyncStackTraceRecordDidCreate:(XBThreadAsyncStackTraceRecord *)asyncStackTraceRecord {
     CHECKINITIALIZED();
-    os_unfair_lock_lock(&recordDicLock);
-    recordDic[[NSValue valueWithPointer:asyncStackTraceRecord.pthread]] = asyncStackTraceRecord;
-    os_unfair_lock_unlock(&recordDicLock);
-
+    @synchronized (self) {
+        recordDic[[NSValue valueWithPointer:asyncStackTraceRecord.pthread]] = asyncStackTraceRecord;
+    }
 }
 + (void)asynTraceRecordWillDestroy:(XBThreadAsyncStackTraceRecord *)asyncStackTraceRecord {
     CHECKINITIALIZED();
-    os_unfair_lock_lock(&recordDicLock);
-    [recordDic removeObjectForKey:[NSValue valueWithPointer:asyncStackTraceRecord.pthread]];
-    os_unfair_lock_unlock(&recordDicLock);
+    @synchronized (self) {
+        [recordDic removeObjectForKey:[NSValue valueWithPointer:asyncStackTraceRecord.pthread]];
+    }
 }
 + (XBThreadAsyncStackTraceRecord *)asyncTraceForPthread:(pthread_t)pthread {
     CHECKINITIALIZED();
-    os_unfair_lock_lock(&recordDicLock);
-    XBThreadAsyncStackTraceRecord *asyncStackTraceRecord = recordDic[[NSValue valueWithPointer:pthread]];
-    os_unfair_lock_unlock(&recordDicLock);
+    XBThreadAsyncStackTraceRecord *asyncStackTraceRecord;
+    @synchronized (self) {
+        asyncStackTraceRecord = recordDic[[NSValue valueWithPointer:pthread]];
+    }
     return asyncStackTraceRecord;
 }
 - (instancetype)initWithPthread:(pthread_t)pthread {
