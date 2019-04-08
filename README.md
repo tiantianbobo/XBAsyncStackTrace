@@ -49,7 +49,7 @@ But the XBAsyncStackTrace will record the async stack trace, as the Xcode do if 
 4   UIKitCore                           0x0000000110ae44e1 -[UIViewController loadViewIfRequired] + 1186
 5   UIKitCore                           0x0000000110ae4940 -[UIViewController view] + 27
 ```
-##How it works
+## How it works
 We hook dispatch async/after/barrier func, both block version and func version.At the beginning of replace func, we record the call stack trace, and call original dispatch func with another block parameter, which will set the current thread's async stack trace as the stack trace recorded before, and invoke original block, clear the current thread's async stack trace at the end of block.
 If this is "_f" version, we alloc a new parameter record the func and context passed to dispatch func and current call stack trace, and pass another func to dispatch, which will accept the new parameter, set current thread's async stack trace as recorded stack trace, call original func and clear current thread's async stack trace at the end as block version.
 And in your crash handler, get the thread's async stack trace.If there is one, this must be the crash func's async stack trace.
