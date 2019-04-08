@@ -38,8 +38,8 @@ Guess what stack trace will be when this code crash?
     frame #6: 0x0000000104553169 libsystem_pthread.dylib`_pthread_wqthread + 1387
     frame #7: 0x0000000104552be9 libsystem_pthread.dylib`start_wqthread + 13
 ```
-Surprising!
-Actually, since last line of the block inside callCrashFunc is calling another func, if compiler optimization was set, there will be a tail call optimization. So the assemble code for `[object class]` will be an jump opcode not an call opcode(for arm, it will be b versus bl, for x86, it will be j versus call).So the actual crash address will not be pushed into the stack, which means the stack trace will not contain any info about the real crash address.
+Surprising!  
+Actually, since last line of the block inside callCrashFunc is calling another func, if compiler optimization was set, there will be a tail call optimization. So the assemble code for `[object class]` will be an jump opcode not an call opcode(for arm, it will be b versus bl, for x86, it will be j versus call).So the actual crash address will not be pushed into the stack, which means the stack trace will not contain any info about the real crash address.  
 But the XBAsyncStackTrace will record the async stack trace, as the Xcode do if Queue Debugging:enable backtrace recording(Product -> Scheme -> Edit Scheme) was selected(Debug Navigator will show you the stack frame where the current running func was enqueued to the dispatch). The following shows async stack trace XBAsyncStackTrace record for the example crash.
 ```
 0   XBAsyncStackTraceExample            0x000000010c89d75c blockRecordAsyncTrace + 76
@@ -50,12 +50,12 @@ But the XBAsyncStackTrace will record the async stack trace, as the Xcode do if 
 5   UIKitCore                           0x0000000110ae4940 -[UIViewController view] + 27
 ```
 ## How it works
-We hook dispatch async/after/barrier func, both block version and func version.At the beginning of replace func, we record the call stack trace, and call original dispatch func with another block parameter, which will set the current thread's async stack trace as the stack trace recorded before, and invoke original block, clear the current thread's async stack trace at the end of block.
+We hook dispatch async/after/barrier func, both block version and func version.At the beginning of replace func, we record the call stack trace, and call original dispatch func with another block parameter, which will set the current thread's async stack trace as the stack trace recorded before, and invoke original block, clear the current thread's async stack trace at the end of block.  
 If this is "_f" version, we alloc a new parameter record the func and context passed to dispatch func and current call stack trace, and pass another func to dispatch, which will accept the new parameter, set current thread's async stack trace as recorded stack trace, call original func and clear current thread's async stack trace at the end as block version.
-And in your crash handler, get the thread's async stack trace.If there is one, this must be the crash func's async stack trace.
+And in your crash handler, get the thread's async stack trace.If there is one, this must be the crash func's async stack trace.  
 For performSelector:onThread:withObject:waitUntilDone:modes:, it does the same thing.
 ## install
-pod 'XBAsyncStackTrace'
+pod 'XBAsyncStackTrace'  
 note:XBAsyncStackTrace relies on the fishhook to hook func.If you install from Pod, Pod will install fishhook too.If you link XBAsyncStackTrace library built from source, you need link fishhook too.
 ## Example
 In XBAsyncStackTraceExample, you should run pod install first then open the workspace.And you should make a breakpoint in the project ,and print "pro hand -p true -s false SIGSEGV" in lldb, which tells lldb to not stop on SIGSEGV, so that the crash handler will catch crash while you are debugging.
