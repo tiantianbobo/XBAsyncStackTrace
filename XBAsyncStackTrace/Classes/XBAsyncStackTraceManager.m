@@ -37,10 +37,14 @@ __attribute__((always_inline)) AsyncStackTrace getCurAsyncStackTrace(void) {
 static inline dispatch_block_t blockRecordAsyncTrace(dispatch_block_t block) {
     XBTIME_TICK();
     AsyncStackTrace asyncStackTrace = getCurAsyncStackTrace();
-    dispatch_block_t newBlock = ^(){
+    __block dispatch_block_t oriBlock = block;
+   dispatch_block_t newBlock = ^(){
         XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
         [curRecord recordBackTrace:asyncStackTrace];
-        block();
+        oriBlock();
+        oriBlock = nil;
+       //force block dispose oriBlock, so if any crash happens inside __destroy_helper_block we can still get async stack trace.
+
         [curRecord popBackTrace];
     };
     XBTIME_TOCK();

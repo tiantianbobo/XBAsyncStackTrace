@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,7 @@
 		00398C92224226F300BB9D20 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00398C91224226F300BB9D20 /* Assets.xcassets */; };
 		00398C95224226F300BB9D20 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 00398C93224226F300BB9D20 /* LaunchScreen.storyboard */; };
 		00398C98224226F300BB9D20 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 00398C97224226F300BB9D20 /* main.m */; };
+		00A2A5A72382736A002C4324 /* MRCTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 00A2A5A62382736A002C4324 /* MRCTest.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		19FC0EE38206FA3ACCF25FC3 /* Pods_XBAsyncStackTraceExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11671717106D200C5E26BCE1 /* Pods_XBAsyncStackTraceExample.framework */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +30,8 @@
 		00398C94224226F300BB9D20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		00398C96224226F300BB9D20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00398C97224226F300BB9D20 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		00A2A5A52382736A002C4324 /* MRCTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MRCTest.h; sourceTree = "<group>"; };
+		00A2A5A62382736A002C4324 /* MRCTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MRCTest.m; sourceTree = "<group>"; };
 		11671717106D200C5E26BCE1 /* Pods_XBAsyncStackTraceExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_XBAsyncStackTraceExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		55D18380D5C67F6AFDE853E1 /* Pods-XBAsyncStackTraceExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XBAsyncStackTraceExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample.release.xcconfig"; sourceTree = "<group>"; };
 		D5154F57CEDC4813D5810513 /* Pods-XBAsyncStackTraceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-XBAsyncStackTraceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample.debug.xcconfig"; sourceTree = "<group>"; };
@@ -77,6 +80,8 @@
 				00398C96224226F300BB9D20 /* Info.plist */,
 				00398C97224226F300BB9D20 /* main.m */,
 				00398C8E224226F100BB9D20 /* XBAsyncStackTraceExample.xcdatamodeld */,
+				00A2A5A52382736A002C4324 /* MRCTest.h */,
+				00A2A5A62382736A002C4324 /* MRCTest.m */,
 			);
 			path = XBAsyncStackTraceExample;
 			sourceTree = "<group>";
@@ -189,17 +194,16 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/fishhook/fishhook.framework",
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/fishhook.framework",
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-XBAsyncStackTraceExample/Pods-XBAsyncStackTraceExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -210,6 +214,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00398C8A224226F100BB9D20 /* ViewController.m in Sources */,
+				00A2A5A72382736A002C4324 /* MRCTest.m in Sources */,
 				00398C87224226F100BB9D20 /* AppDelegate.m in Sources */,
 				00398C98224226F300BB9D20 /* main.m in Sources */,
 				00398C90224226F100BB9D20 /* XBAsyncStackTraceExample.xcdatamodeld in Sources */,

@@ -14,6 +14,7 @@
 #include <mach/mach_port.h>
 #import <XBASyncStackTrace/XBAsyncStackTrace-umbrella.h>
 #import <pthread.h>
+#import "MRCTest.h"
 void sig_handler(int sig, siginfo_t *info, void *context)
 {
 #ifdef arm64
@@ -37,7 +38,7 @@ void sig_handler(int sig, siginfo_t *info, void *context)
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    //tell lldb to not stop on SIGSEGV;
+    //breakpoint on this line and type following command to tell lldb to not stop on SIGSEGV, so that we can debug our sig_handler.
     //pro hand -p true -s false SIGSEGV
     int ret = task_set_exception_ports(
                                        mach_task_self(),
@@ -62,7 +63,8 @@ void sig_handler(int sig, siginfo_t *info, void *context)
 //    [self testTimeCost];
 //    [self testNSOperationQueueCrash];
 //    [self testPerformSelectCrash];
-    [self testDispatchAsyncCrash];
+//    [self testDispatchAsyncCrash];
+    [MRCTest runAsyncCrashOnRelease];
 //    [self testUIAnimationBlockCrash];
 }
 - (void)testTimeCost {
