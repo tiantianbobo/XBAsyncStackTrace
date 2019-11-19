@@ -37,6 +37,9 @@ __attribute__((always_inline)) AsyncStackTrace getCurAsyncStackTrace(void) {
 static inline dispatch_block_t blockRecordAsyncTrace(dispatch_block_t block) {
     XBTIME_TICK();
     AsyncStackTrace asyncStackTrace = getCurAsyncStackTrace();
+    if (block == nil) {
+        __asm__(""); __builtin_trap();
+    }
     __block dispatch_block_t oriBlock = block;
    dispatch_block_t newBlock = ^(){
         XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
