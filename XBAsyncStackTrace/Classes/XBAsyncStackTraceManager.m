@@ -44,7 +44,6 @@ static inline dispatch_block_t blockRecordAsyncTrace(dispatch_block_t block) {
         oriBlock();
         oriBlock = nil;
        //force block dispose oriBlock, so if any crash happens inside __destroy_helper_block we can still get async stack trace.
-
         [curRecord popBackTrace];
     };
     XBTIME_TOCK();

@@ -16,12 +16,10 @@
         [object description];
         [mrcTest description];//object comes first, so it will dealloc last, which make [mrcTest dealloc] will not become tail call and __destroy_helper_block_e8_32o40o will appear on stack
     });
+    NSObject *danglingPointer = [[NSObject new] autorelease];
+    objc_setAssociatedObject(mrcTest, @"danglingPointer", danglingPointer, OBJC_ASSOCIATION_RETAIN);
+    [danglingPointer release];//danglingPointer was over releasd, but only crash when block release mrcTest.
     [mrcTest release];
 }
 
-- (void)dealloc {
-    [super dealloc];
-    id object = (__bridge id)(void*)1;
-    [object class];
-}
 @end
