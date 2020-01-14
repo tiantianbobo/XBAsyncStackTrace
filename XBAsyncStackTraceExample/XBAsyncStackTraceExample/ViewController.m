@@ -57,7 +57,7 @@ void sig_handler(int sig, siginfo_t *info, void *context)
     sigaction(SIGABRT, &sa, NULL);
     sigaction(SIGKILL, &sa, NULL);
     sigaction(SIGBUS, &sa, NULL);
-    [[XBAsyncStackTraceManager sharedInstance] setMaxBackTraceLimit:32];
+    [[XBAsyncStackTraceManager sharedInstance] setMaxBacktraceLimit:32];
     [[XBAsyncStackTraceManager sharedInstance] beginHook];
 
 //    [self testTimeCost];
