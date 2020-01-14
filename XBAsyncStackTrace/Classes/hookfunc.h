@@ -22,7 +22,7 @@ ret_type WRAP(func)(__VA_ARGS__) {
 
 
 #define BEGIN_HOOK(func) \
-rebind_symbols((struct rebinding[2]){{#func, WRAP(func), (void *)&ORIFUNC(func)}}, 1);
+rebind_symbols((struct rebinding[1]){{#func, WRAP(func), (void *)&ORIFUNC(func)}}, 1);
 #else
 
 #endif

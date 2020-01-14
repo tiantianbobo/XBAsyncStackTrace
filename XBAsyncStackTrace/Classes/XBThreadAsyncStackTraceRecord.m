@@ -43,8 +43,11 @@ static void destroyThreadStackTraceRecord(void *value) {
     tls_set(XBThreadAsyncStackTraceTlsKey, XB_TSD_BAD_PTR);
     record = nil;
 }
-#define CHECKINITIALIZED()     NSAssert(initialized, @"sdhould initializeAsyncStackTraceRecord first")
+#define CHECKINITIALIZED()     NSAssert(initialized, @"should initializeAsyncStackTraceRecord first")
 
+@interface XBThreadAsyncStackTraceRecord()
+@property (nonatomic, assign) AsyncStackTrace asyncStackTrace;
+@end
 
 @implementation XBThreadAsyncStackTraceRecord
 + (BOOL)initializeAsyncStackTraceRecord {

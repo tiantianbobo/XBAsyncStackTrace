@@ -23,32 +23,33 @@ static XBTimeCostRecord *timeCostRecord;
 #define XBTIME_TOCK()
 #endif
 
-static int MaxBacktraceLimit = 32;
 __attribute__((always_inline)) AsyncStackTrace getCurAsyncStackTrace(void) {
+    int maxBacktraceLimit = [XBAsyncStackTraceManager sharedInstance].maxBacktraceLimit;
     AsyncStackTrace asyncStackTrace;
-    void **backTracePtr = (void **)malloc(sizeof(void*) * MaxBacktraceLimit);
-    size_t size = backtrace(backTracePtr, MaxBacktraceLimit);
+    void **backTracePtr = (void **)malloc(sizeof(void*) * maxBacktraceLimit);
+    size_t size = backtrace(backTracePtr, maxBacktraceLimit);
     asyncStackTrace.backTrace = backTracePtr;
     asyncStackTrace.size = size;
     return asyncStackTrace;
 }
 
 #pragma mark - hook dispatch helper func
-static inline dispatch_block_t blockRecordAsyncTrace(dispatch_block_t block) {
+static __attribute__((always_inline)) dispatch_block_t blockRecordAsyncTrace(dispatch_block_t block) {
     XBTIME_TICK();
     AsyncStackTrace asyncStackTrace = getCurAsyncStackTrace();
+    NSCAssert(block != NULL, @"block is nil");
     if (block == nil) {
         __asm__(""); __builtin_trap();
     }
     __block dispatch_block_t oriBlock = block;
-   dispatch_block_t newBlock = ^(){
+    dispatch_block_t newBlock = ^(){
         XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
         [curRecord recordBackTrace:asyncStackTrace];
         oriBlock();
         oriBlock = nil;
        //force block dispose oriBlock, so if any crash happens inside __destroy_helper_block we can still get async stack trace.
         [curRecord popBackTrace];
-    };
+     };
     XBTIME_TOCK();
     return newBlock;
 }
@@ -58,7 +59,7 @@ typedef struct AsyncRecord {
     dispatch_function_t oriFunc;
     AsyncStackTrace asyncStackTrace;
 } AsyncRecord;
-static inline void* newContextRecordAsyncTrace(void *_Nullable context, dispatch_function_t work) {
+static __attribute__((always_inline)) void* newContextRecordAsyncTrace(void *_Nullable context, dispatch_function_t work) {
     XBTIME_TICK();
     AsyncRecord *record = (AsyncRecord *)calloc(sizeof(AsyncRecord),1);
 //    if (record == NULL) {
@@ -153,6 +154,11 @@ HOOK_FUNC(void, dispatch_barrier_async_f, dispatch_queue_t queue, void *_Nullabl
 
 @end
 
+@interface XBAsyncStackTraceManager()
+@property (nonatomic, assign) BOOL xbInitialized;
+
+@end
+
 
 @implementation XBAsyncStackTraceManager
 + (instancetype)sharedInstance {
@@ -163,27 +169,40 @@ HOOK_FUNC(void, dispatch_barrier_async_f, dispatch_queue_t queue, void *_Nullabl
     });
     return s_instance;
 }
-- (void)setMaxBackTraceLimit:(int)maxBacktraceLimit {
-    MaxBacktraceLimit = maxBacktraceLimit;
-}
-- (BOOL)beginHook {
-    BOOL result = [XBThreadAsyncStackTraceRecord initializeAsyncStackTraceRecord];
-    if(!__builtin_expect(result,1)) {
-        return NO;
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _maxBacktraceLimit = 32;
     }
-#if ENABLE_TIME_COST_RECORD
-    timeCostRecord = [XBTimeCostRecord new];
-#endif
-    BEGIN_HOOK(dispatch_async);
-    BEGIN_HOOK(dispatch_async_f);
-    BEGIN_HOOK(dispatch_after);
-    BEGIN_HOOK(dispatch_after_f);
-    BEGIN_HOOK(dispatch_barrier_async);
-    BEGIN_HOOK(dispatch_barrier_async_f);
-    {
-        Method systemMethod = class_getInstanceMethod([NSObject class], @selector(performSelector:onThread:withObject:waitUntilDone:modes:));
-        Method zwMethod = class_getInstanceMethod([NSObject class], @selector(xb_performSelector:onThread:withObject:waitUntilDone:modes:));
-        method_exchangeImplementations(systemMethod, zwMethod);
+    return self;
+}
+
+- (BOOL)beginHook {
+    @synchronized (self) {
+        if (self.xbInitialized) {
+            return YES;
+        }
+        BOOL result = [XBThreadAsyncStackTraceRecord initializeAsyncStackTraceRecord];
+        if(!__builtin_expect(result,1)) {
+            return NO;
+        }
+    #if ENABLE_TIME_COST_RECORD
+        timeCostRecord = [XBTimeCostRecord new];
+    #endif
+        BEGIN_HOOK(dispatch_async);
+        BEGIN_HOOK(dispatch_async_f);
+        BEGIN_HOOK(dispatch_after);
+        BEGIN_HOOK(dispatch_after_f);
+        BEGIN_HOOK(dispatch_barrier_async);
+        BEGIN_HOOK(dispatch_barrier_async_f);
+        {
+            Method systemMethod = class_getInstanceMethod([NSObject class], @selector(performSelector:onThread:withObject:waitUntilDone:modes:));
+            Method zwMethod = class_getInstanceMethod([NSObject class], @selector(xb_performSelector:onThread:withObject:waitUntilDone:modes:));
+            method_exchangeImplementations(systemMethod, zwMethod);
+        }
+        self.xbInitialized = YES;
     }
     return YES;
 }

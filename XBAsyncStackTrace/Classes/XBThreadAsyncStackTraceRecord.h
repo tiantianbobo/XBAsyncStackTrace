@@ -10,13 +10,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 typedef struct AsyncStackTrace {
-    void **backTrace;
+    void *_Nonnull* _Nonnull backTrace;
     size_t size;
 } AsyncStackTrace;
 
 @interface XBThreadAsyncStackTraceRecord : NSObject
 @property (nonatomic, assign) pthread_t pthread;
-@property (nonatomic, assign) AsyncStackTrace asyncStackTrace;
+@property (nonatomic, assign, readonly) AsyncStackTrace asyncStackTrace;
 
 
 //initialize before call other func;

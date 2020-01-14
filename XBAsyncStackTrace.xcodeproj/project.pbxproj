@@ -7,14 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00398C6A22421C6F00BB9D20 /* XBAsyncStackTraceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C6222421C6F00BB9D20 /* XBAsyncStackTraceManager.h */; };
+		0037ED2123CC03D4007C620B /* XBAsyncStackTraceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0037ED2023CC03D4007C620B /* XBAsyncStackTraceTests.m */; };
+		0037ED2323CC03D4007C620B /* XBAsyncStackTrace.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00398C5322421C4500BB9D20 /* XBAsyncStackTrace.framework */; };
+		0037ED2923CC042C007C620B /* XBThreadAsyncStackTraceRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C6422421C6F00BB9D20 /* XBThreadAsyncStackTraceRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0037ED2A23CC0486007C620B /* XBAsyncStackTrace.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C5622421C4500BB9D20 /* XBAsyncStackTrace.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0037ED5E23CC1439007C620B /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 00398C7122421CAA00BB9D20 /* fishhook.c */; };
+		00398C6A22421C6F00BB9D20 /* XBAsyncStackTraceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C6222421C6F00BB9D20 /* XBAsyncStackTraceManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		00398C6B22421C6F00BB9D20 /* XBAsyncStackTraceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 00398C6322421C6F00BB9D20 /* XBAsyncStackTraceManager.m */; };
 		00398C6D22421C6F00BB9D20 /* XBThreadAsyncStackTraceRecord.m in Sources */ = {isa = PBXBuildFile; fileRef = 00398C6522421C6F00BB9D20 /* XBThreadAsyncStackTraceRecord.m */; };
-		00398C6E22421C6F00BB9D20 /* XBTimeCostRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C6622421C6F00BB9D20 /* XBTimeCostRecord.h */; };
+		00398C6E22421C6F00BB9D20 /* XBTimeCostRecord.h in Headers */ = {isa = PBXBuildFile; fileRef = 00398C6622421C6F00BB9D20 /* XBTimeCostRecord.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		00398C6F22421C6F00BB9D20 /* XBTimeCostRecord.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00398C6722421C6F00BB9D20 /* XBTimeCostRecord.mm */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		0037ED2423CC03D4007C620B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00398C4A22421C4500BB9D20 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00398C5222421C4500BB9D20;
+			remoteInfo = XBAsyncStackTrace;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		0037ED1E23CC03D4007C620B /* XBAsyncStackTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XBAsyncStackTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0037ED2023CC03D4007C620B /* XBAsyncStackTraceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XBAsyncStackTraceTests.m; sourceTree = "<group>"; };
+		0037ED2223CC03D4007C620B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00398C5322421C4500BB9D20 /* XBAsyncStackTrace.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = XBAsyncStackTrace.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		00398C5622421C4500BB9D20 /* XBAsyncStackTrace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XBAsyncStackTrace.h; sourceTree = "<group>"; };
 		00398C5722421C4500BB9D20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -31,6 +49,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0037ED1B23CC03D4007C620B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0037ED2323CC03D4007C620B /* XBAsyncStackTrace.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		00398C5022421C4500BB9D20 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -41,10 +67,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0037ED1F23CC03D4007C620B /* XBAsyncStackTraceTests */ = {
+			isa = PBXGroup;
+			children = (
+				0037ED2023CC03D4007C620B /* XBAsyncStackTraceTests.m */,
+				0037ED2223CC03D4007C620B /* Info.plist */,
+			);
+			path = XBAsyncStackTraceTests;
+			sourceTree = "<group>";
+		};
 		00398C4922421C4500BB9D20 = {
 			isa = PBXGroup;
 			children = (
 				00398C5522421C4500BB9D20 /* XBAsyncStackTrace */,
+				0037ED1F23CC03D4007C620B /* XBAsyncStackTraceTests */,
 				00398C5422421C4500BB9D20 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				00398C5322421C4500BB9D20 /* XBAsyncStackTrace.framework */,
+				0037ED1E23CC03D4007C620B /* XBAsyncStackTraceTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,6 +137,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				00398C6A22421C6F00BB9D20 /* XBAsyncStackTraceManager.h in Headers */,
+				0037ED2923CC042C007C620B /* XBThreadAsyncStackTraceRecord.h in Headers */,
+				0037ED2A23CC0486007C620B /* XBAsyncStackTrace.h in Headers */,
 				00398C6E22421C6F00BB9D20 /* XBTimeCostRecord.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -107,6 +146,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		0037ED1D23CC03D4007C620B /* XBAsyncStackTraceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0037ED2823CC03D4007C620B /* Build configuration list for PBXNativeTarget "XBAsyncStackTraceTests" */;
+			buildPhases = (
+				0037ED1A23CC03D4007C620B /* Sources */,
+				0037ED1B23CC03D4007C620B /* Frameworks */,
+				0037ED1C23CC03D4007C620B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0037ED2523CC03D4007C620B /* PBXTargetDependency */,
+			);
+			name = XBAsyncStackTraceTests;
+			productName = XBAsyncStackTraceTests;
+			productReference = 0037ED1E23CC03D4007C620B /* XBAsyncStackTraceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		00398C5222421C4500BB9D20 /* XBAsyncStackTrace */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00398C5B22421C4500BB9D20 /* Build configuration list for PBXNativeTarget "XBAsyncStackTrace" */;
@@ -134,6 +191,9 @@
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = xiaobochen;
 				TargetAttributes = {
+					0037ED1D23CC03D4007C620B = {
+						CreatedOnToolsVersion = 11.0;
+					};
 					00398C5222421C4500BB9D20 = {
 						CreatedOnToolsVersion = 10.1;
 					};
@@ -152,11 +212,19 @@
 			projectRoot = "";
 			targets = (
 				00398C5222421C4500BB9D20 /* XBAsyncStackTrace */,
+				0037ED1D23CC03D4007C620B /* XBAsyncStackTraceTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0037ED1C23CC03D4007C620B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		00398C5122421C4500BB9D20 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -167,19 +235,70 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0037ED1A23CC03D4007C620B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0037ED2123CC03D4007C620B /* XBAsyncStackTraceTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		00398C4F22421C4500BB9D20 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				00398C6B22421C6F00BB9D20 /* XBAsyncStackTraceManager.m in Sources */,
 				00398C6D22421C6F00BB9D20 /* XBThreadAsyncStackTraceRecord.m in Sources */,
+				0037ED5E23CC1439007C620B /* fishhook.c in Sources */,
 				00398C6F22421C6F00BB9D20 /* XBTimeCostRecord.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0037ED2523CC03D4007C620B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00398C5222421C4500BB9D20 /* XBAsyncStackTrace */;
+			targetProxy = 0037ED2423CC03D4007C620B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0037ED2623CC03D4007C620B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = XBAsyncStackTraceTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = bobo.XBAsyncStackTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0037ED2723CC03D4007C620B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = XBAsyncStackTraceTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = bobo.XBAsyncStackTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		00398C5922421C4500BB9D20 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -349,6 +468,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0037ED2823CC03D4007C620B /* Build configuration list for PBXNativeTarget "XBAsyncStackTraceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0037ED2623CC03D4007C620B /* Debug */,
+				0037ED2723CC03D4007C620B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		00398C4D22421C4500BB9D20 /* Build configuration list for PBXProject "XBAsyncStackTrace" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

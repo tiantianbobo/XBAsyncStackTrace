@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 #import "XBThreadAsyncStackTraceRecord.h"
 @interface XBAsyncStackTraceManager : NSObject
+//default 32
+@property (nonatomic, assign) int maxBacktraceLimit;
 + (instancetype)sharedInstance;
 - (NSString *)getTimeCostDesc;
-//default 32
-- (void)setMaxBackTraceLimit:(int)maxBacktraceLimit;
 - (BOOL)beginHook;
 - (XBThreadAsyncStackTraceRecord *)asyncTraceForPthread:(pthread_t)pthread;
 
