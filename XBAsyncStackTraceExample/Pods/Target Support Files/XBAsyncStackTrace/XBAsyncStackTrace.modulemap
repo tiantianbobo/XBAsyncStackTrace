@@ -1,0 +1,6 @@
+framework module XBAsyncStackTrace {
+  umbrella header "XBAsyncStackTrace-umbrella.h"
+
+  export *
+  module * { export * }
+}
