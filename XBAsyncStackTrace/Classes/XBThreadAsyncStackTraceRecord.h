@@ -29,6 +29,8 @@ typedef struct AsyncStackTrace {
 //now backTrace will not nest, async's func will not run another asyn's func;
 - (void)recordBackTrace:(AsyncStackTrace)asyncStackTrace;
 - (void)popBackTrace;
+- (void *_Nonnull* _Nonnull)backTrace;
+- (size_t)backTraceSize;
 - (NSString *)symbolicatedBackTrace;
 @end
 

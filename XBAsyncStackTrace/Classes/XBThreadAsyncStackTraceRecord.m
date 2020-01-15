@@ -120,6 +120,12 @@ static void destroyThreadStackTraceRecord(void *value) {
     zeroStruct.size = 0;
     self.asyncStackTrace = zeroStruct;
 }
+- (void *_Nonnull* _Nonnull)backTrace {
+    return self.asyncStackTrace.backTrace;
+}
+- (size_t)backTraceSize {
+    return self.asyncStackTrace.size;
+}
 - (NSString *)symbolicatedBackTrace {
     NSMutableString *info = [NSMutableString new];
     char **strings;
