@@ -1,7 +1,7 @@
 (see this for english version .[this](#XBAsyncStackTrace_en))  
 # XBAsyncStackTrace
 iOS 异步堆栈回朔框架
-##使用方法
+## 使用方法
 使用如下代码开启异步堆栈监控，目前只支持dispatch的异步api和performSelector:onThread:withObject:waitUntilDone:modes:。
 
 ```
@@ -128,7 +128,7 @@ XBAsyncStackTrace可以直接通过Pod安装，将上面代码添加到Podfile�
 
 ## XBAsyncStackTraceExample
 XBAsyncStackTraceExample是一个演示如何使用XBAsyncStackTrace的例子。打开XBAsyncStackTraceExample.xcworkspace，并且在crash代码前打个断点，在lldb中输入如下指令，"pro hand -p true -s false SIGSEGV"，该指令告诉lldb忽略SIGSEGV信号，这样XBAsyncStackTraceExample的crash handler就可以捕捉到crash，你就可以调试你的crash捕捉逻辑了。可以看到在sig_handler获取并打印当前crash线程的异步堆栈。
-##XBAsyncStackTraceTests
+## XBAsyncStackTraceTests
 XBAsyncStackTraceTests测试了dispatch的六种情况和performSelector:onThread:withObject:waitUntilDone:情况下捕捉到的异步堆栈的正确性。代码在调用异步方法前获取当前的堆栈，在异步调用的代码里获取当前的异步堆栈，对比两个堆栈是否一致。由于我们是在hook的方法中去获取异步堆栈，所以和实际代码获取的堆栈比较的话，第一层堆栈是多余的，第二层堆栈的方法是一致的，但是偏移是有所差别的。对于performSelector:onThread:withObject:waitUntilDone:modes则是忽略前面两层堆栈。
 
 ------
