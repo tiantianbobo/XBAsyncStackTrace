@@ -72,6 +72,22 @@ void async_func_callback(void *context);
     return @{RECORD_KEY:record, TESTS_KEY:self, EXPECTATION_KEY:expectation};
 }
 
+- (int)getAdditionalFrame:(XBThreadAsyncStackTraceRecord *)actualStack asyncRecord:(XBThreadAsyncStackTraceRecord *)asyncRecord {
+    for (int i = 0; i < asyncRecord.backTraceSize; i++) {
+        BOOL isEqualFromCurFrame = YES;
+        for (int j = 1; j+i < asyncRecord.backTraceSize ; j++) {
+            if(actualStack.backTrace[j] != asyncRecord.backTrace[j+i]) {
+                isEqualFromCurFrame = NO;
+                break;
+            }
+        }
+        if (isEqualFromCurFrame) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 //for dispatch func
 //asyncStackTrceRecord:
 //0   XBAsyncStackTraceTests              0x000000010760f4c1 wrap_dispatch_async + 273
@@ -105,7 +121,7 @@ void async_func_callback(void *context);
     XCTAssert(asyncRecordTopDlInfo.dli_saddr == actualTopDlInfo.dli_saddr, @"asyncRecordTopDlInfo top Frame[%d]:%p,%s is not equal to actualTopDlInfo[0],%p,%s", additionalFrame, asyncRecordTopDlInfo.dli_saddr, asyncRecordTopDlInfo.dli_sname, actualTopDlInfo.dli_saddr, actualTopDlInfo.dli_sname);
 }
 
-- (void)_checkAsyncStackTraceFrameCorrect:(XBThreadAsyncStackTraceRecord *)actualRecord asyncRecord:(XBThreadAsyncStackTraceRecord *)asyncRecord additionalFrame:(int)additionalFrame {
+- (void)_checkAsyncStackTraceBottomFrameCorrect:(XBThreadAsyncStackTraceRecord *)actualRecord asyncRecord:(XBThreadAsyncStackTraceRecord *)asyncRecord additionalFrame:(int)additionalFrame {
     [self _checkAsyncStackTraceTopFrameCorrect:actualRecord asyncRecord:asyncRecord additionalFrame:additionalFrame];
     for (size_t i = additionalFrame + 1; i < asyncRecord.backTraceSize; i++) {
         XCTAssert(asyncRecord.backTrace[i] == actualRecord.backTrace[i-additionalFrame], "asyncRecord backTrace[%zu]:%p is not equal to actualRecord backTrace[%zu]:%p",
@@ -118,9 +134,19 @@ void async_func_callback(void *context);
     XBThreadAsyncStackTraceRecord *asyncRecord = [self.asyncManager asyncTraceForPthread:pthread_self()];
     XCTAssert(asyncRecord.pthread == pthread_self());
     [self _checkAsyncStackTraceSizeCorrect:actualRecord asyncRecord:asyncRecord additionalFrame:additionalFrame];
-    [self _checkAsyncStackTraceFrameCorrect:actualRecord asyncRecord:asyncRecord additionalFrame:additionalFrame];
+    [self _checkAsyncStackTraceBottomFrameCorrect:actualRecord asyncRecord:asyncRecord additionalFrame:additionalFrame];
     return ;
 }
+
+- (void)_checkAsyncStackTraceIsCorrect:(XBThreadAsyncStackTraceRecord *)actualRecord {
+    XBThreadAsyncStackTraceRecord *asyncRecord = [self.asyncManager asyncTraceForPthread:pthread_self()];
+    int additionalFrame = [self getAdditionalFrame:actualRecord asyncRecord:asyncRecord];
+    const int MaxAdditionalFrame = 10;
+    XCTAssert(additionalFrame >= 0 && additionalFrame < MaxAdditionalFrame);
+    [self _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:additionalFrame];
+    return ;
+}
+
 
 - (void)testDispatchBlockAsyncBarrierAsyncAfterCanGetAsyncStackTrace {
     XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
@@ -170,16 +196,23 @@ void async_func_callback(void *context);
 //1   CoreFoundation                      0x00007fff23b9f95c __invoking___ + 140
 - (void)_selectorThatCheckCanGetAsyncStrackTrace:(NSDictionary *)contextDict {
     XBThreadAsyncStackTraceRecord *actualRecord = contextDict[RECORD_KEY];
-    [self _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:2];
+    [self _checkAsyncStackTraceIsCorrect:actualRecord];
     [self fullFillExpectationWithContextDict:contextDict];
 }
 
 - (void)testPerformSelectorCanGetAsyncStackTrace {
     XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
-    NSDictionary *contextDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"testPerformSelectorCanGetAsyncStackTrace"];
-    [self performSelector:@selector(_selectorThatCheckCanGetAsyncStrackTrace:) onThread:[NSThread mainThread] withObject:contextDict waitUntilDone:NO];
+    SEL aSelector = @selector(_selectorThatCheckCanGetAsyncStrackTrace:);
+    
+    NSDictionary *performSelectorDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"performSelector"];
+    [self performSelector:aSelector onThread:[NSThread mainThread] withObject:performSelectorDict waitUntilDone:NO modes:@[NSDefaultRunLoopMode]];
+    
+    NSDictionary *performSelectorInBackgroundDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"performSeleperformSelectorInBackgroundDictctor"];
+    [self performSelectorInBackground:aSelector withObject:performSelectorInBackgroundDict ];
+    
     [self waitForXbExpectation];
 }
+
 
 - (void)testStackLengthNotBeyondMaxBackTraceLimit {
     //make xctests coverage 100;
@@ -187,6 +220,7 @@ void async_func_callback(void *context);
     [[XBAsyncStackTraceManager sharedInstance] setMaxBacktraceLimit:MaxBacktraceLimit];
     self.maxBacktraceLimit = self.asyncManager.maxBacktraceLimit;
     XCTAssert(self.maxBacktraceLimit == MaxBacktraceLimit);
+    
     [self testPerformSelectorCanGetAsyncStackTrace];
 }
 

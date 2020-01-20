@@ -135,6 +135,9 @@ static void destroyThreadStackTraceRecord(void *value) {
     }
     return [info copy];
 }
+- (NSString *)debugDescription {
+    return [self symbolicatedBackTrace];
+}
 - (void)dealloc {
     [self clearCurBackTrace];
 }
