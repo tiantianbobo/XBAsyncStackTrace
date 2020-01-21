@@ -61,12 +61,6 @@ void async_func_callback(void *context);
     [self.xbExpectationArray removeAllObjects];
 }
 
-- (void)fullFillExpectationWithContextDict:(NSDictionary *)contextDict {
-    XCTestExpectation *expectation = contextDict[EXPECTATION_KEY];
-    XCTAssert(expectation != NULL);
-    [expectation fulfill];
-}
-
 - (NSDictionary *)contextDictWithActualRecord:(XBThreadAsyncStackTraceRecord *)record expectationDesc:(NSString *)expectationDesc {
     XCTestExpectation *expectation = [self xbExpectationWithDescription:expectationDesc];
     return @{RECORD_KEY:record, TESTS_KEY:self, EXPECTATION_KEY:expectation};
@@ -147,31 +141,35 @@ void async_func_callback(void *context);
     return ;
 }
 
+- (void)checkAsyncStackTraceWithContextDict:(NSDictionary *)contextDict {
+    XBThreadAsyncStackTraceRecord *actualRecord = contextDict[RECORD_KEY];
+    [self _checkAsyncStackTraceIsCorrect:actualRecord];
+    XCTestExpectation *expectation = contextDict[EXPECTATION_KEY];
+    XCTAssert(expectation != NULL);
+    [expectation fulfill];
+}
 
-- (void)testDispatchBlockAsyncBarrierAsyncAfterCanGetAsyncStackTrace {
+- (void)testDispatchBlockAsyncBarrierAfterCanGetAsyncStackTrace {
     XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
     dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
     NSDictionary *dispatch_async_dict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"dispatch_async"];
     dispatch_async(queue, ^{
-        [self _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:1];
-        [self fullFillExpectationWithContextDict:dispatch_async_dict];
+        [self checkAsyncStackTraceWithContextDict:dispatch_async_dict];
     });
     
     NSDictionary *dispatch_barrier_async_dict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"dispatch_barrier_async"];
     dispatch_barrier_async(queue, ^{
-        [self _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:1];
-        [self fullFillExpectationWithContextDict:dispatch_barrier_async_dict];
+        [self checkAsyncStackTraceWithContextDict:dispatch_barrier_async_dict];
     });
     
     NSDictionary *dispatch_after_dict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"dispatch_after"];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), queue, ^{
-        [self _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:1];
-        [self fullFillExpectationWithContextDict:dispatch_after_dict];
+        [self checkAsyncStackTraceWithContextDict:dispatch_after_dict];
     });
     [self waitForXbExpectation];
 }
 
-- (void)testDispatchFuncAsyncBarrierAsyncAfterCanGetAsyncStackTrace {
+- (void)testDispatchFuncAsyncBarrierAfterCanGetAsyncStackTrace {
     XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
     dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
     
@@ -195,9 +193,7 @@ void async_func_callback(void *context);
 //0   XBAsyncStackTraceTests              0x0000000111d7df11 -[XBAsyncStackTraceTests testPerformSelectorCanGetAsyncStackTrace] + 129
 //1   CoreFoundation                      0x00007fff23b9f95c __invoking___ + 140
 - (void)_selectorThatCheckCanGetAsyncStrackTrace:(NSDictionary *)contextDict {
-    XBThreadAsyncStackTraceRecord *actualRecord = contextDict[RECORD_KEY];
-    [self _checkAsyncStackTraceIsCorrect:actualRecord];
-    [self fullFillExpectationWithContextDict:contextDict];
+    [self checkAsyncStackTraceWithContextDict:contextDict];
 }
 
 - (void)testPerformSelectorCanGetAsyncStackTrace {
@@ -206,13 +202,84 @@ void async_func_callback(void *context);
     
     NSDictionary *performSelectorDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"performSelector"];
     [self performSelector:aSelector onThread:[NSThread mainThread] withObject:performSelectorDict waitUntilDone:NO modes:@[NSDefaultRunLoopMode]];
-    
+
+    NSDictionary *performSelectorOnMainThreadDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"performSelectorOnMainThread"];
+    [self performSelectorOnMainThread:aSelector withObject:performSelectorOnMainThreadDict waitUntilDone:NO modes:@[NSDefaultRunLoopMode]];
+
+    //NSThread init
     NSDictionary *performSelectorInBackgroundDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"performSeleperformSelectorInBackgroundDictctor"];
     [self performSelectorInBackground:aSelector withObject:performSelectorInBackgroundDict ];
     
     [self waitForXbExpectation];
 }
 
+- (void)testNSOperationQueueCanGetAsyncStackTrace  {
+    XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+
+    NSDictionary *addOperationWithBlockDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperationWithBlock"];
+    [operationQueue addOperationWithBlock:^{
+        [self checkAsyncStackTraceWithContextDict:addOperationWithBlockDict];
+    }];
+#if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+    NSDictionary *addOperationWithBaiierBlockDict = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperationWithBaiierBlock"];
+        //  NSBarrierOperation, call dispatch_async
+        [operationQueue addBarrierBlock:^{
+            [self checkAsyncStackTraceWithContextDict:addOperationWithBaiierBlockDict];
+        }];
+    }
+#endif
+    
+    NSDictionary *addOperationWithInvokeOperation = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperationWithInvokeOperation"];
+    NSInvocationOperation *invokeOperation = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(checkAsyncStackTraceWithContextDict:) object:addOperationWithInvokeOperation];
+    [operationQueue addOperation:invokeOperation];
+    
+    NSDictionary *addOperationWithBlockOperation = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperationWithBlockOperation"];
+    NSBlockOperation *blockOperation = [NSBlockOperation blockOperationWithBlock:^{
+        [self checkAsyncStackTraceWithContextDict:addOperationWithBlockOperation];
+    }];
+    [operationQueue addOperation:blockOperation];
+
+//{
+//    NSDictionary *addOperations1 = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperations1"];
+//    NSOperation *operation1 = [NSBlockOperation blockOperationWithBlock:^{
+//        [self checkAsyncStackTraceWithContextDict:addOperations1];
+//    }];
+//    NSDictionary *addOperations2 = [self contextDictWithActualRecord:actualRecord expectationDesc:@"addOperations2"];
+//    NSOperation *operation2 = [[NSInvocationOperation alloc] initWithTarget:self selector:@selector(checkAsyncStackTraceWithContextDict:) object:addOperations2];
+//
+//    NSArray *operations = @[operation1, operation2];
+//
+//    [operationQueue addOperations:operations waitUntilFinished:NO];
+//}
+    [self waitForXbExpectation];
+}
+
+- (void)testNSThreadCanGetAsyncStackTrace {
+    XBThreadAsyncStackTraceRecord *actualRecord = getCurAsyncStackTraceRecord();
+
+//    detachNewThreadWithBlock use pthread with __NSThread__block_start__, now does not support.
+    
+//    NSDictionary *detachThreadWithBlock = [self contextDictWithActualRecord:actualRecord expectationDesc:@"detachThreadWithBlock"];
+//    [NSThread detachNewThreadWithBlock:^{
+//        [self checkAsyncStackTraceWithContextDict:detachThreadWithBlock];
+//    }];
+
+    NSDictionary *detachNewThreadSelector = [self contextDictWithActualRecord:actualRecord expectationDesc:@"detachNewThreadSelector"];
+    [NSThread detachNewThreadSelector:@selector(checkAsyncStackTraceWithContextDict:) toTarget:self withObject:detachNewThreadSelector];
+    
+    NSDictionary *threadInitWithBlockDic = [self contextDictWithActualRecord:actualRecord expectationDesc:@"threadInitWithBlock"];
+    NSThread *threadInitWithBlock = [[NSThread alloc] initWithBlock:^{
+        [self checkAsyncStackTraceWithContextDict:threadInitWithBlockDic];
+    }];
+    [threadInitWithBlock start];
+    
+    NSDictionary *threadInitWithSelectorDic = [self contextDictWithActualRecord:actualRecord expectationDesc:@"threadInitWithSelectorDic"];
+    NSThread *threadInitWithSelector= [[NSThread alloc] initWithTarget:self selector:@selector(checkAsyncStackTraceWithContextDict:) object:threadInitWithSelectorDic];
+    [threadInitWithSelector start];
+    
+    [self waitForXbExpectation];
+}
 
 - (void)testStackLengthNotBeyondMaxBackTraceLimit {
     //make xctests coverage 100;
@@ -243,7 +310,5 @@ void async_func_callback(void *context);
 void async_func_callback(void *context) {
     NSDictionary *contextDict = CFBridgingRelease(context);
     XBAsyncStackTraceTests *tests = contextDict[TESTS_KEY];
-    XBThreadAsyncStackTraceRecord *actualRecord = contextDict[RECORD_KEY];
-    [tests _checkAsyncStackTraceIsCorrect:actualRecord additionalFrame:1];
-    [tests fullFillExpectationWithContextDict:contextDict];
+    [tests checkAsyncStackTraceWithContextDict:contextDict];
 }

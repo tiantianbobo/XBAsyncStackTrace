@@ -13,6 +13,7 @@
 #import "XBTimeCostRecord.h"
 #include <objc/runtime.h>
 
+
 #pragma mark - TIME_COST_RECORD
 
 #define ENABLE_TIME_COST_RECORD 0
@@ -24,6 +25,7 @@ static XBTimeCostRecord *timeCostRecord;
 #define XBTIME_TICK()
 #define XBTIME_TOCK()
 #endif
+
 
 #pragma mark - asyncStrackTrace helper func
 
@@ -48,6 +50,7 @@ AsyncStackTrace asyncStrckTraceFromNSValue(NSValue *value) {
     [value getValue:&asyncStackTrace];
     return asyncStackTrace;
 }
+
 
 #pragma mark - hook dispatch helper func
 
@@ -76,6 +79,7 @@ typedef struct AsyncRecord {
     dispatch_function_t oriFunc;
     AsyncStackTrace asyncStackTrace;
 } AsyncRecord;
+
 static __attribute__((always_inline)) void* newContextRecordAsyncTrace(void *_Nullable context, dispatch_function_t work) {
     XBTIME_TICK();
     AsyncRecord *record = (AsyncRecord *)calloc(sizeof(AsyncRecord),1);
@@ -89,6 +93,7 @@ static __attribute__((always_inline)) void* newContextRecordAsyncTrace(void *_Nu
     XBTIME_TOCK();
     return record;
 }
+
 static void replaceFuncRecordAsyncTrace(void *_Nullable context) {
     AsyncRecord *record = (AsyncRecord *)context;
     XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
@@ -101,7 +106,9 @@ static void replaceFuncRecordAsyncTrace(void *_Nullable context) {
     [curRecord popBackTrace];
     free(record);
 }
+
 #define NEW_CONTEXT_WORK_RECORD(context,work) newContextRecordAsyncTrace(context, work),replaceFuncRecordAsyncTrace
+
 
 #pragma mark - hook dispatch
 
@@ -126,6 +133,7 @@ HOOK_FUNC(void, dispatch_barrier_async_f, dispatch_queue_t queue, void *_Nullabl
     orig_dispatch_barrier_async_f(queue,NEW_CONTEXT_WORK_RECORD(context,work));
 }
 
+
 #pragma mark - hook NSObject helper func
 
 #define XB_HOOKMETHOD(class, aSelector)\
@@ -139,12 +147,17 @@ void xb_hookMethod(Class class, SEL oriSel, SEL hookSel) {
     method_exchangeImplementations(systemMethod, zwMethod);
 }
 
+
 @interface XBAsyncRecordParam : NSObject
+
 @property (nonatomic, strong) id arg;
 @property (nonatomic, assign) SEL aSelector;
 @property (nonatomic, assign) AsyncStackTrace asyncStackTrace;
+
 @end
+
 @implementation XBAsyncRecordParam
+
 - (instancetype)initWithSelector:(SEL)aSelector ar:(id)arg {
     if (self = [super init]) {
         self.aSelector = aSelector;
@@ -155,23 +168,19 @@ void xb_hookMethod(Class class, SEL oriSel, SEL hookSel) {
 
 @end
 
+
 #pragma mark - hook NSObject
 
 @interface NSObject (XB_Hook_NSThreadPerformAdditions)
 
 @end
 
-
-@implementation NSObject  (XB_Hook_NSThreadPerformAdditions)
+@implementation NSObject (XB_Hook_NSThreadPerformAdditions)
 
 - (void)xb_performSelector:(SEL)aSelector onThread:(NSThread *)thr withObject:(nullable id)arg waitUntilDone:(BOOL)wait modes:(nullable NSArray<NSString *> *)array {
-    if (!wait) {
-        XBAsyncRecordParam *param = [[XBAsyncRecordParam alloc] initWithSelector:aSelector ar:arg];
-        param.asyncStackTrace = getCurAsyncStackTrace();
-        [self xb_performSelector:@selector(xb_performWithAsyncTrace:) onThread:thr withObject:param waitUntilDone:wait modes:array];
-    } else {
-        [self xb_performSelector:aSelector onThread:thr withObject:arg waitUntilDone:wait modes:array];
-    }
+    XBAsyncRecordParam *param = [[XBAsyncRecordParam alloc] initWithSelector:aSelector ar:arg];
+    param.asyncStackTrace = getCurAsyncStackTrace();
+    [self xb_performSelector:@selector(xb_performWithAsyncTrace:) onThread:thr withObject:param waitUntilDone:wait modes:array];
 }
 
 - (void)xb_performWithAsyncTrace:(XBAsyncRecordParam *)param {
@@ -186,54 +195,118 @@ void xb_hookMethod(Class class, SEL oriSel, SEL hookSel) {
 
 @end
 
+#pragma mark - XBAsyncStrackTraceNSObjectHelpFunc
+
+static const void *XBAsyncStackTraceKey;
+
+@interface NSObject (XB_Hook_HelpFunc)
+
+@end
+
+@implementation NSObject (XB_Hook_HelpFunc)
+
+- (void)xb_performBlockInsideAsyncTrace:(void (^)(void))block {
+    NSValue *traceValue = objc_getAssociatedObject(self, &XBAsyncStackTraceKey);
+    XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
+    
+    if (traceValue != nil) {
+        AsyncStackTrace asyncStackTrace = asyncStrckTraceFromNSValue(traceValue);
+        [curRecord recordBackTrace:asyncStackTrace];
+    }
+    if (block != nil) {
+        block();
+    }
+    if (traceValue != nil) {
+        [curRecord popBackTrace];
+        objc_setAssociatedObject(self, &XBAsyncStackTraceKey, nil, OBJC_ASSOCIATION_RETAIN);
+    }
+}
+
+@end
+
 #pragma mark - hook NSThread
-const void *XBNSThreadAsyncStackTraceKey;
 
 @interface NSThread (XB_Hook_NSThread)
 
 @end
 
-
-@implementation NSThread  (XB_Hook_NSThread)
+@implementation NSThread (XB_Hook_NSThread)
 
 - (instancetype)xb_init {
     NSThread *newSelf = [self xb_init];
     NSValue *traceValue = getCurAsyncStackTraceNSValue();
-    objc_setAssociatedObject(newSelf, &XBNSThreadAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
-    return newSelf;
-}
-
-- (instancetype)xb_initWithTarget:(id)target selector:(SEL)selector object:(nullable id)argument {
-    NSThread *newSelf = [self xb_initWithTarget:target selector:selector object:argument];
-    NSValue *traceValue = getCurAsyncStackTraceNSValue();
-    objc_setAssociatedObject(newSelf, &XBNSThreadAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
-    return newSelf;
-}
-
-- (instancetype)xb_initWithBlock:(void (^)(void))block {
-    NSThread *newSelf = [self xb_initWithBlock:block];
-    NSValue *traceValue = getCurAsyncStackTraceNSValue();
-    objc_setAssociatedObject(newSelf, &XBNSThreadAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(newSelf, &XBAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
     return newSelf;
 }
 
 - (void)xb_main {
-    NSValue *traceValue = objc_getAssociatedObject(self, &XBNSThreadAsyncStackTraceKey);
-    XBThreadAsyncStackTraceRecord *curRecord = [XBThreadAsyncStackTraceRecord currentAsyncStackTraceRecord];
-    if (traceValue != nil) {
-        AsyncStackTrace asyncStackTrace = asyncStrckTraceFromNSValue(traceValue);
-        [curRecord recordBackTrace:asyncStackTrace];
-    }
-    [self xb_main];
-    if (traceValue != nil) {
-        [curRecord popBackTrace];
-        objc_setAssociatedObject(self, &XBNSThreadAsyncStackTraceKey, nil, OBJC_ASSOCIATION_RETAIN);
-    }
+    [self xb_performBlockInsideAsyncTrace:^{
+        [self xb_main];
+    }];
 }
 
 @end
 
+
+#pragma mark - hook NSOpetaion
+
+const void *XBNSThreadAsyncStackTraceKey;
+
+@interface NSOperationQueue (XB_Hook_NSOperationQueue)
+
+@end
+
+@implementation NSOperationQueue (XB_Hook_NSOperationQueue)
+
+- (void)xb_addOperation:(NSOperation *)op {
+    NSValue *traceValue = getCurAsyncStackTraceNSValue();
+    objc_setAssociatedObject(op, &XBAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
+    [self xb_addOperation:op];
+}
+
+//- (void)xb_addOperations:(NSArray<NSOperation *> *)ops waitUntilFinished:(BOOL)wait {
+//    NSValue *traceValue = getCurAsyncStackTraceNSValue();
+//    for(NSOperation *op in ops) {
+//        objc_setAssociatedObject(op, &XBAsyncStackTraceKey, traceValue, OBJC_ASSOCIATION_RETAIN);
+//    }
+//    [self xb_addOperations:ops waitUntilFinished:wait];
+//}
+
+@end
+
+
+@interface NSBlockOperation (XB_Hook_NSBlockOperation)
+
+@end
+
+@implementation NSBlockOperation  (XB_Hook_NSBlockOperation)
+
+- (void)xb_main {
+    [self xb_performBlockInsideAsyncTrace:^{
+        [self xb_main];
+    }];
+}
+
+@end
+
+
+@interface NSInvocationOperation (XB_Hook_NSInvocationOperation)
+
+@end
+
+@implementation NSInvocationOperation  (XB_Hook_NSInvocationOperation)
+
+- (void)xb_main {
+    [self xb_performBlockInsideAsyncTrace:^{
+        [self xb_main];
+    }];
+}
+
+@end
+
+
 @interface XBAsyncStackTraceManager()
+
 @property (nonatomic, assign) BOOL xbInitialized;
 
 @end
@@ -249,8 +322,7 @@ const void *XBNSThreadAsyncStackTraceKey;
     return s_instance;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         _maxBacktraceLimit = 32;
@@ -282,16 +354,23 @@ const void *XBNSThreadAsyncStackTraceKey;
         {
             XB_HOOKMETHOD([NSThread class], main);
             XB_HOOKMETHOD([NSThread class], init);
-            XB_HOOKMETHOD([NSThread class], initWithBlock:);
-            XB_HOOKMETHOD([NSThread class], initWithTarget:selector:object:);
+        }
+        {
+            XB_HOOKMETHOD([NSOperationQueue class], addOperation:);
+//            XB_HOOKMETHOD([NSOperationQueue class], addOperations:waitUntilFinished:);
+
+            XB_HOOKMETHOD([NSBlockOperation class], main);
+            XB_HOOKMETHOD([NSInvocationOperation class], main);
         }
         self.xbInitialized = YES;
     }
     return YES;
 }
+
 - (XBThreadAsyncStackTraceRecord *)asyncTraceForPthread:(pthread_t)pthread {
     return [XBThreadAsyncStackTraceRecord asyncTraceForPthread:pthread];
 }
+
 - (NSString *)getTimeCostDesc {
 #if ENABLE_TIME_COST_RECORD
     return [timeCostRecord timeCostDesc];
@@ -299,4 +378,5 @@ const void *XBNSThreadAsyncStackTraceKey;
     return @"ENABLE_TIME_COST_RECORD not enabled";
 #endif
 }
+
 @end
